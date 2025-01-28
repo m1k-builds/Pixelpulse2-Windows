@@ -40,8 +40,9 @@ jobs:
         C:\msys64\usr\bin\bash -lc "rm -f /mingw64/lib/cmake/Qt5Qml/*Factory.cmake"
         # Install Inno Setup
          choco install InnoSetup
+         choco install wget
         # Download dpinst for Driver installing from swdownloads
-        wget DownloadFile http://swdownloads.analog.com/cse/m1k/drivers/dpinst.zip -o C:\dpinst.zip
+        wget http://swdownloads.analog.com/cse/m1k/drivers/dpinst.zip -o C:\dpinst.zip
         7z x -y "c:\dpinst.zip" -o"c:\dpinst" > nul
         # Download a 32-bit version of windres.exe
         wget http://swdownloads.analog.com/cse/build/windres.exe.gz -o C:\windres.exe.gz
