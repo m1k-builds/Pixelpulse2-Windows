@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+ # pull_request:
+ #   branches:
+ #     - master
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ windows-latest ]  #  [ubuntu-24.04,ubuntu-24.04-arm] #[ubuntu-20.04, macos-latest, windows-latest]
+      fail-fast: false
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13' 
+
+    - name: Install dependencies (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        choco install innosetup
+        choco install 7zip
+        choco install git
+        choco install msys2
+        refreshenv
+        C:\msys64\usr\bin\bash -lc "pacman -Syu --noconfirm"
+        C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Sy mingw-w64-i686-boost mingw-w64-i686-python3 mingw-w64-i686-libzip mingw-w64-i686-icu"
+        C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Sy mingw-w64-x86_64-boost mingw-w64-x86_64-python3 mingw-w64-x86_64-libzip mingw-w64-x86_64-icu mingw-w64-x86_64-toolchain"
+
+    - name: Clone and build libsmu (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        git clone https://github.com/analogdevicesinc/libsmu.git C:\projects\libsmu
+        mkdir C:\projects\libsmu\build && cd C:\projects\libsmu\build
+        cmake -G "MinGW Makefiles" -DCMAKE_INSTALL_PREFIX=C:\msys64\mingw64 -DCMAKE_C_COMPILER=C:\msys64\mingw64\bin\x86_64-w64-mingw32-gcc.exe -DCMAKE_CXX_COMPILER=C:\msys64\mingw64\bin\x86_64-w64-mingw32-g++.exe -DBUILD_PYTHON=OFF ..
+        mingw32-make
+        mingw32-make install
+        cd C:\projects\libsmu
+
+    - name: Build Pixelpulse2 (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        mkdir C:\projects\pixelpulse2\build && cd C:\projects\pixelpulse2\build
+        cmake -G "MinGW Makefiles" -DCMAKE_INSTALL_PREFIX=C:\msys64\mingw64 -DCMAKE_C_COMPILER=C:\msys64\mingw64\bin\x86_64-w64-mingw32-gcc.exe -DCMAKE_CXX_COMPILER=C:\msys64\mingw64\bin\x86_64-w64-mingw32-g++.exe ..
+        mingw32-make
+
+    - name: Create Windows installer
+      if: runner.os == 'Windows'
+      run: |
+        cd C:\projects\pixelpulse2\build
+        "C:\Program Files (x86)\Inno Setup 5\ISCC.exe" pixelpulse2.iss
+
+    - name: Upload Release Asset (Windows)
+      if: runner.os == 'Windows'
+      uses: softprops/action-gh-release@v1
+      with:
+        target_commitish: ${{ github.ref_name }}
+        files: build/Pixelpulse2_win_setup.exe
+        name: pixelpulse2-${{ github.ref_name }}.exe
+        tag_name: ${{ github.run_id }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
