@@ -11,10 +11,10 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
     strategy:
       matrix:
-        os: [ windows-latest ]  #  [ubuntu-24.04,ubuntu-24.04-arm] #[ubuntu-20.04, macos-latest, windows-latest]
+        build_arch: [32,64]  #  [ubuntu-24.04,ubuntu-24.04-arm] #[ubuntu-20.04, macos-latest, windows-latest]
       fail-fast: false
 
     steps:
@@ -39,7 +39,7 @@ jobs:
         C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Sy mingw-w64-x86_64-boost mingw-w64-x86_64-python3 mingw-w64-x86_64-libzip mingw-w64-x86_64-icu mingw-w64-x86_64-toolchain"
 
     - name: Clone and build libsmu (Windows)
-      if: runner.os == 'Windows'
+      if: matrix.build_arch == '64'
       run: |
         git clone https://github.com/analogdevicesinc/libsmu.git C:\projects\libsmu
         mkdir C:\projects\libsmu\build && cd C:\projects\libsmu\build
@@ -49,10 +49,10 @@ jobs:
         cd C:\projects\libsmu
 
     - name: Build Pixelpulse2 (Windows)
-      if: runner.os == 'Windows'
+      if: matrix.build_arch == '64'
       run: |
         mkdir C:\projects\pixelpulse2\build && cd C:\projects\pixelpulse2\build
-        cmake -G "MinGW Makefiles" -DCMAKE_INSTALL_PREFIX=C:\msys64\mingw64 -DCMAKE_C_COMPILER=C:\msys64\mingw64\bin\x86_64-w64-mingw32-gcc.exe -DCMAKE_CXX_COMPILER=C:\msys64\mingw64\bin\x86_64-w64-mingw32-g++.exe ..
+        cmake -G "MinGW Makefiles" -DCMAKE_INSTALL_PREFIX=C:\msys64\mingw64 -DCMAKE_C_COMPILER=C:\msys64\mingw64\bin\gcc.exe -DCMAKE_CXX_COMPILER=C:\msys64\mingw64\bin\g++.exe ..
         mingw32-make
 
     - name: Create Windows installer
@@ -66,7 +66,7 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         target_commitish: ${{ github.ref_name }}
-        files: build/Pixelpulse2_win_setup.exe
+        files: build/*.exe
         name: pixelpulse2-${{ github.ref_name }}.exe
         tag_name: ${{ github.run_id }}
       env:
