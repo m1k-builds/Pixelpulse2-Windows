@@ -43,7 +43,7 @@ jobs:
       run: |
         git clone https://github.com/analogdevicesinc/libsmu.git C:\projects\libsmu
         mkdir C:\projects\libsmu\build && cd C:\projects\libsmu\build
-        cmake -G "MinGW Makefiles" -DCMAKE_INSTALL_PREFIX=C:\msys64\mingw64 -DCMAKE_C_COMPILER=C:\msys64\mingw64\bin\x86_64-w64-mingw32-gcc.exe -DCMAKE_CXX_COMPILER=C:\msys64\mingw64\bin\x86_64-w64-mingw32-g++.exe -DBUILD_PYTHON=OFF ..
+        cmake -G "MinGW Makefiles" -DCMAKE_INSTALL_PREFIX=C:\msys64\mingw64 -DCMAKE_C_COMPILER=C:\msys64\mingw64\bin\gcc.exe -DCMAKE_CXX_COMPILER=C:\msys64\mingw64\bin\g++.exe -DBUILD_PYTHON=OFF ..
         mingw32-make
         mingw32-make install
         cd C:\projects\libsmu
